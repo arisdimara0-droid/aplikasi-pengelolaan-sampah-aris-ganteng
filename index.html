@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengelolaan Sampah (ARIS GANTENG)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .page { display: none; }
+        .active { display: block; }
+        .tab { cursor: pointer; }
+        .tab.active-tab { border-bottom: 2px solid #10b981; color: #10b981; }
+        .status-message { transition: opacity 0.3s; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-4 md:p-8">
+
+    <div id="landing-page" class="page active max-w-2xl mx-auto text-center pt-12 px-4">
+        <div class="mb-4">
+            <span class="text-emerald-600 font-bold uppercase tracking-widest text-sm">Child AID Papua</span>
+        </div>
+        <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">Pengelolaan Sampah (ARIS GANTENG)</h1>
+        <p class="text-gray-600 mb-8 leading-relaxed">
+            Bersama Child AID Papua, kami berkomitmen menciptakan lingkungan sekolah yang bersih dan sehat.
+            Aplikasi ini hadir sebagai sarana pengelolaan sampah sekolah untuk menciptakan lingkungan belajar yang berkelanjutan, mendukung kesehatan, dan mengapresiasi kontribusi positif setiap siswa.
+        </p>
+        <button onclick="showDashboard()" class="bg-emerald-600 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-emerald-700 shadow-lg transition">Mulai Kelola Sampah</button>
+    </div>
+
+    <div id="dashboard-page" class="page max-w-4xl mx-auto">
+        <header class="mb-6 flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-gray-800">Dasbor Pengelolaan Sampah</h1>
+            <button onclick="showLanding()" class="text-gray-500 border px-3 py-1 rounded-lg hover:bg-gray-100">Keluar</button>
+        </header>
+
+        <div id="status-msg" class="hidden mb-4 p-3 bg-emerald-100 text-emerald-800 rounded-lg text-sm text-center"></div>
+
+        <div class="flex gap-4 mb-6 border-b overflow-x-auto pb-1">
+            <div onclick="switchTab('input')" id="tab-input" class="tab active-tab pb-2 font-semibold whitespace-nowrap">Input Data</div>
+            <div onclick="switchTab('stats')" id="tab-stats" class="tab pb-2 font-semibold text-gray-500 whitespace-nowrap">Peningkatan</div>
+            <div onclick="switchTab('rekap')" id="tab-rekap" class="tab pb-2 font-semibold text-gray-500 whitespace-nowrap">Rekap Poin</div>
+            <div onclick="switchTab('bintang')" id="tab-bintang" class="tab pb-2 font-semibold text-gray-500 whitespace-nowrap">Penghargaan</div>
+            <div onclick="switchTab('medali')" id="tab-medali" class="tab pb-2 font-semibold text-gray-500 whitespace-nowrap">Medali</div>
+        </div>
+
+        <div id="section-input" class="content-section">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border mb-8">
+                <h2 class="text-lg font-semibold mb-4">Simpan Log Sampah</h2>
+                <div class="flex flex-col gap-3">
+                    <select id="nama" class="p-2 border rounded-lg w-full"></select>
+                    <select id="kelas" class="p-2 border rounded-lg w-full">
+                        <option value="" disabled selected>Pilih Kelas</option>
+                        <option value="VII">VII</option><option value="VIII">VIII</option><option value="IX">IX</option>
+                        <option value="X">X</option><option value="XI">XI</option><option value="XII">XII</option>
+                    </select>
+                    <select id="kategori" class="p-2 border rounded-lg w-full">
+                        <option value="" disabled selected>Pilih Sampah</option>
+                        <option value="Plastik">🧴 Plastik</option>
+                        <option value="Kertas">📄 Kertas/Kardus</option>
+                        <option value="Kaca">🍷 Kaca</option>
+                    </select>
+                    <input type="number" id="berat" placeholder="Berat (kg)" class="p-2 border rounded-lg w-full">
+                    <button onclick="addWaste()" class="bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 font-bold shadow-md">Simpan</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-stats" class="content-section hidden">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                <h2 class="text-lg font-semibold mb-4">Grafik Perolehan Siswa</h2>
+                <div id="student-stats" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <div id="section-rekap" class="content-section hidden">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border mb-6">
+                <h2 class="text-lg font-semibold mb-4 text-emerald-600">Peringkat Poin Tertinggi</h2>
+                <div id="rekap-leaderboard" class="space-y-3"></div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <h2 class="text-lg font-semibold p-6 border-b">Daftar Riwayat Poin</h2>
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 text-sm">
+                        <tr><th class="p-4">Nama</th><th class="p-4">Kategori</th><th class="p-4">Poin</th></tr>
+                    </thead>
+                    <tbody id="rekap-list" class="divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="section-bintang" class="content-section hidden">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border mb-6">
+                <h2 class="text-lg font-semibold mb-4">Beri Bintang untuk Siswa Rajin</h2>
+                <div class="flex flex-col gap-3">
+                    <select id="nama-bintang" class="p-2 border rounded-lg w-full"></select>
+                    <select id="jumlah-bintang" class="p-2 border rounded-lg w-full">
+                        <option value="1">1 Bintang ⭐</option><option value="2">2 Bintang ⭐⭐</option>
+                        <option value="3">3 Bintang ⭐⭐⭐</option><option value="4">4 Bintang ⭐⭐⭐⭐</option>
+                        <option value="5">5 Bintang ⭐⭐⭐⭐⭐</option>
+                    </select>
+                    <input type="text" id="alasan-bintang" placeholder="Alasan pemberian bintang" class="p-2 border rounded-lg w-full">
+                    <button onclick="addStarFromDropdown()" class="bg-yellow-400 text-white px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 shadow-md">Beri Bintang ⭐</button>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                <h2 class="text-lg font-semibold mb-4 text-emerald-600">Daftar Peraih Bintang</h2>
+                <div id="bintang-results-list" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <div id="section-medali" class="content-section hidden">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                <h2 class="text-lg font-semibold mb-4 text-indigo-600">Penganugerahan Medali Juara</h2>
+                <button onclick="updateMedaliView()" class="bg-indigo-600 text-white w-full py-3 rounded-xl font-bold mb-6 hover:bg-indigo-700 shadow-lg">Cek Peraih Medali</button>
+                <div id="medali-results-list" class="space-y-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const siswaList = [
+            "Putri Dimara", "Vence Siori", "Eta Siori", "Neda Rudisman", "Sintike Kaloli", "Nathan Dimara", 
+            "Riko Mambrasar", "Febri Dimara", "Melvin Kalamin", "Faisal Tanjung", "Herlina Dimara", "Yudris Mundo", 
+            "Leberina Mambrasar", "Sonia Dimara", "Merry Mambrasar", "Marco Mayor", "Alvaro Dimara", "Niko Mambrasar", 
+            "Ledrik Mamarodi", "Oca Makim", "Jeni Mamarodi", "Gerson Wawiai", "Paska Kambu", "Mesli Mambrasar", 
+            "Marsya Werinusa", "Atin Bonsapia", "Neta Mambrasar", "Frans Werinusa", "Elkanus Ambafen", "Markus Dimara", 
+            "Fanita Burdam", "Sari Abaire", "Bram Sauyai", "Aris Dimara", "Rio Dimara", "Hengky Mayor", "Mira Sauyai", 
+            "Olla Umpain", "Inggo Waropen", "Yucha Burdam", "Donal Gaman", "Charles Kabes", "Feby Sauyai", "Lohini Arwakon", 
+            "Markus Hara", "Brian Manuk", "Uziel Mambraku", "Naindes Sauyai", "Marfel Mambrasar", "Elis Arwakon", 
+            "Aude Arwakon", "David Mambrasar", "Hugo Sanadi", "Beto Burdam", "Mutiara Ayorbaba", "Delila Awom", 
+            "Maryane Mambraku", "Yuyun Rudisman", "Rode Ayelo", "Candra Amunau"
+        ];
+
+        let wasteData = JSON.parse(localStorage.getItem('wasteData')) || [];
+        let stars = JSON.parse(localStorage.getItem('stars')) || {};
+        let starLogs = JSON.parse(localStorage.getItem('starLogs')) || [];
+
+        // Initialize selects
+        const dropdowns = ['nama', 'nama-bintang'];
+        dropdowns.forEach(id => {
+            const el = document.getElementById(id);
+            el.innerHTML = '<option value="" disabled selected>Pilih Nama</option>';
+            siswaList.forEach(nama => el.innerHTML += `<option value="${nama}">${nama}</option>`);
+        });
+
+        function showStatus(msg) {
+            const status = document.getElementById('status-msg');
+            status.textContent = msg;
+            status.classList.remove('hidden');
+            setTimeout(() => status.classList.add('hidden'), 3000);
+        }
+
+        function showDashboard() {
+            document.getElementById('landing-page').classList.remove('active');
+            document.getElementById('dashboard-page').classList.add('active');
+        }
+
+        function showLanding() {
+            document.getElementById('dashboard-page').classList.remove('active');
+            document.getElementById('landing-page').classList.add('active');
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active-tab'));
+            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById('tab-' + tab).classList.add('active-tab');
+            document.getElementById('section-' + tab).classList.remove('hidden');
+            if(tab === 'stats') updateStatsView();
+            if(tab === 'rekap') updateRekapView();
+            if(tab === 'bintang') updateBintangView();
+        }
+
+        function addWaste() {
+            const nama = document.getElementById('nama').value;
+            const kelas = document.getElementById('kelas').value;
+            const kategori = document.getElementById('kategori').value;
+            const berat = parseFloat(document.getElementById('berat').value);
+            const waktu = new Date().toLocaleString('id-ID');
+            
+            if (!nama || !kelas || !kategori || !berat || berat <= 0) {
+                showStatus("Silakan isi semua data dengan benar!");
+                return;
+            }
+
+            let score = 0;
+            if (kategori === 'Plastik') score = berat * 5;
+            else if (kategori === 'Kertas') score = berat * 3;
+            else if (kategori === 'Kaca') score = berat * 2;
+
+            wasteData.push({ id: Date.now(), nama, kelas, kategori, berat, score, waktu });
+            localStorage.setItem('wasteData', JSON.stringify(wasteData));
+            showStatus("Data tersimpan!");
+            document.getElementById('berat').value = '';
+        }
+
+        function updateMedaliView() {
+            const list = document.getElementById('medali-results-list');
+            list.innerHTML = '';
+            const grouped = wasteData.reduce((acc, curr) => {
+                acc[curr.nama] = (acc[curr.nama] || 0) + curr.score;
+                return acc;
+            }, {});
+
+            const sorted = Object.entries(grouped).sort((a,b) => b[1] - a[1]);
+
+            if (sorted.length === 0) {
+                list.innerHTML = '<p class="text-center text-gray-500">Belum ada data untuk diberikan medali.</p>';
+                return;
+            }
+
+            sorted.forEach((item, index) => {
+                let medal = '';
+                if(index === 0) medal = '🥇 Emas';
+                else if(index === 1) medal = '🥈 Perak';
+                else if(index === 2) medal = '🥉 Perunggu';
+                else return; 
+
+                list.innerHTML += `
+                    <div class="flex items-center justify-between p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${medal.split(' ')[0]}</span>
+                            <div>
+                                <p class="font-bold text-lg">${item[0]}</p>
+                                <p class="text-sm text-indigo-700 font-semibold">${medal}</p>
+                            </div>
+                        </div>
+                        <span class="font-bold text-xl">${item[1]} Poin</span>
+                    </div>
+                `;
+            });
+        }
+
+        function updateStatsView() {
+            const statsContainer = document.getElementById('student-stats');
+            statsContainer.innerHTML = '';
+            const grouped = wasteData.reduce((acc, curr) => {
+                acc[curr.nama] = (acc[curr.nama] || 0) + curr.score;
+                return acc;
+            }, {});
+
+            for (const [nama, totalScore] of Object.entries(grouped)) {
+                statsContainer.innerHTML += `
+                    <div>
+                        <div class="flex justify-between text-sm font-medium"><span>${nama}</span><span>${totalScore}</span></div>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mt-1"><div class="bg-emerald-500 h-2 rounded-full" style="width: ${Math.min(totalScore, 100)}%"></div></div>
+                    </div>
+                `;
+            }
+        }
+
+        function updateRekapView() {
+            const rekapList = document.getElementById('rekap-list');
+            const rekapLeaderboard = document.getElementById('rekap-leaderboard');
+            rekapList.innerHTML = '';
+            rekapLeaderboard.innerHTML = '';
+
+            const iconMap = {
+                'Plastik': '🧴',
+                'Kertas': '📄',
+                'Kaca': '🍷'
+            };
+
+            wasteData.slice().reverse().forEach(item => {
+                rekapList.innerHTML += `
+                    <tr class="text-sm">
+                        <td class="p-4">${item.nama}</td>
+                        <td class="p-4">${iconMap[item.kategori] || ''} ${item.kategori}</td>
+                        <td class="p-4 font-bold">${item.score}</td>
+                    </tr>
+                `;
+            });
+
+            const grouped = wasteData.reduce((acc, curr) => {
+                acc[curr.nama] = (acc[curr.nama] || 0) + curr.score;
+                return acc;
+            }, {});
+            
+            Object.entries(grouped).sort((a,b) => b[1] - a[1]).forEach(([nama, score], idx) => {
+                rekapLeaderboard.innerHTML += `
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span class="font-bold">${idx + 1}. ${nama}</span>
+                        <span class="text-emerald-600 font-bold">${score} Poin</span>
+                    </div>
+                `;
+            });
+        }
+
+        function addStarFromDropdown() {
+            const nama = document.getElementById('nama-bintang').value;
+            const jumlah = parseInt(document.getElementById('jumlah-bintang').value);
+            const alasan = document.getElementById('alasan-bintang').value;
+            const waktu = new Date().toLocaleString('id-ID');
+            
+            if(!nama) {
+                showStatus("Pilih nama siswa!");
+                return;
+            }
+            
+            stars[nama] = (stars[nama] || 0) + jumlah;
+            starLogs.push({nama, jumlah, alasan, waktu});
+            localStorage.setItem('stars', JSON.stringify(stars));
+            localStorage.setItem('starLogs', JSON.stringify(starLogs));
+            
+            updateBintangView();
+            showStatus("Bintang tersimpan!");
+            document.getElementById('alasan-bintang').value = '';
+        }
+
+        function updateBintangView() {
+            const resultList = document.getElementById('bintang-results-list');
+            resultList.innerHTML = '';
+            starLogs.slice().reverse().forEach(log => {
+                resultList.innerHTML += `
+                    <div class="p-3 border-b border-gray-100">
+                        <div class="flex justify-between"><span class="font-semibold">${log.nama}</span><span class="font-bold text-yellow-500">${log.jumlah} ⭐</span></div>
+                        <p class="text-xs text-gray-600">${log.alasan || 'Tanpa alasan'}</p>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
